@@ -47,7 +47,7 @@ export function AddressAutocomplete({ value, onChange, placeholder }: AddressAut
     setLoading(true);
     try {
       const res = await fetch(
-        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5&type=housenumber,street`
+        `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`
       );
       const data = await res.json();
       const results: AddressResult[] = (data.features ?? []).map((f: {

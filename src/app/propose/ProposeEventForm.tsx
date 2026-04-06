@@ -170,9 +170,9 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
             Code postal
           </label>
           <input
-            type="text" required readOnly value={venuePostalCode}
+            type="text" readOnly value={venuePostalCode}
             placeholder="75003"
-            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
+            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/5 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
           />
         </div>
         <div>
@@ -180,9 +180,9 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
             Ville
           </label>
           <input
-            type="text" required readOnly value={venueCity}
+            type="text" readOnly value={venueCity}
             placeholder="Paris"
-            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
+            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/5 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
           />
         </div>
       </div>
