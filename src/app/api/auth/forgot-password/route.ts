@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/mailer";
+import { resend } from "@/lib/resend";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,7 +34,8 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const resetLink = `${appUrl}/auth/reset-password?token=${token}`;
 
-    await sendEmail({
+    await resend.emails.send({
+      from: "Trookie <onboarding@resend.dev>",
       to: normalizedEmail,
       subject: "Réinitialisation de ton mot de passe — Trookie",
       html: `
