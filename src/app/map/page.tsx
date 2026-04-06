@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
 
-import dynamic from "next/dynamic";
+import nextDynamic from "next/dynamic";
 import { prisma } from "@/lib/prisma";
 import type { EventData } from "@/components/EventMarker";
 
 // Dynamic import with SSR disabled — Leaflet requires browser APIs
-const Map = dynamic(() => import("@/components/Map"), {
+const Map = nextDynamic(() => import("@/components/Map"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-gray-100">
