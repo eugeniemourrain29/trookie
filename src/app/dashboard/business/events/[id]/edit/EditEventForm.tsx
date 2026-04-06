@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { AddressAutocomplete, type AddressResult } from "@/components/AddressAutocomplete";
 
 const TIME_SLOTS = [
   "10h00 – 12h00", "11h00 – 13h00", "12h00 – 14h00",
@@ -28,6 +29,11 @@ export function EditEventForm({ event }: EditEventFormProps) {
   const [title, setTitle] = useState(event.title);
   const [venueSuggestion, setVenueSuggestion] = useState(event.venueSuggestion);
   const [venueAddress, setVenueAddress] = useState(event.venueAddress);
+  const [venuePostalCode, setVenuePostalCode] = useState("");
+  const [venueCity, setVenueCity] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [addressChanged, setAddressChanged] = useState(false);
   const [date, setDate] = useState(event.date);
   const [timeSlot, setTimeSlot] = useState(event.timeSlot);
   const [maxParticipants, setMaxParticipants] = useState(event.maxParticipants);
@@ -37,16 +43,43 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
   const today = new Date().toISOString().split("T")[0];
 
+  function handleAddressSelect(result: AddressResult) {
+    setVenueAddress(result.label);
+    setVenuePostalCode(result.postcode);
+    setVenueCity(result.city);
+    setLat(result.lat);
+    setLng(result.lng);
+    setAddressChanged(true);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
+    if (addressChanged && (!venuePostalCode || !venueCity)) {
+      setError("Sélectionne une adresse dans la liste pour valider le code postal et la ville.");
+      return;
+    }
+
+    setLoading(true);
     try {
+      const fullAddress = addressChanged
+        ? `${venueAddress}, ${venuePostalCode} ${venueCity}`
+        : venueAddress;
+
       const res = await fetch(`/api/events/${event.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, venueSuggestion, venueAddress, date, timeSlot, maxParticipants, price }),
+        body: JSON.stringify({
+          title,
+          venueSuggestion,
+          venueAddress: fullAddress,
+          ...(addressChanged && { lat, lng }),
+          date,
+          timeSlot,
+          maxParticipants,
+          price,
+        }),
       });
 
       const data = await res.json();
@@ -85,9 +118,30 @@ export function EditEventForm({ event }: EditEventFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-black mb-1.5">Adresse</label>
-        <input type="text" required value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm" />
+        <AddressAutocomplete
+          value={venueAddress}
+          onChange={handleAddressSelect}
+          placeholder="Rechercher une adresse…"
+        />
+        {!addressChanged && (
+          <p className="mt-1 text-xs text-black/40">Modifie l&apos;adresse pour mettre à jour le code postal et la ville.</p>
+        )}
       </div>
+
+      {addressChanged && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-black mb-1.5">Code postal</label>
+            <input type="text" readOnly value={venuePostalCode}
+              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black text-sm cursor-default" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-black mb-1.5">Ville</label>
+            <input type="text" readOnly value={venueCity}
+              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black text-sm cursor-default" />
+          </div>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-black mb-1.5">Date</label>
@@ -99,9 +153,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
         <label className="block text-sm font-medium text-black mb-1.5">Créneau horaire</label>
         <select required value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm">
-          {TIME_SLOTS.map((slot) => (
-            <option key={slot} value={slot}>{slot}</option>
-          ))}
+          {TIME_SLOTS.map((slot) => <option key={slot} value={slot}>{slot}</option>)}
         </select>
       </div>
 
@@ -126,7 +178,7 @@ export function EditEventForm({ event }: EditEventFormProps) {
           Annuler
         </button>
         <button type="submit" disabled={loading}
-          className="flex-1 bg-[#0e59c3] text-white font-medium py-3 rounded-xl hover:bg-[#0d4fad] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
+          className="flex-1 bg-[#0e59c3] text-white font-medium py-3 rounded-xl hover:bg-[#0d4fad] transition-colors disabled:opacity-60 flex items-center justify-center gap-2 text-sm">
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {loading ? "Modification…" : "Enregistrer"}
         </button>

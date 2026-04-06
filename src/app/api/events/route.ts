@@ -3,21 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=fr`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Trookie/1.0 (trookie.vercel.app)" },
-    });
-    const data = await res.json();
-    if (data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-    }
-  } catch {}
-  return null;
-}
-
-const businessEventSchema = z.object({
+const eventSchema = z.object({
   title: z.string().min(1),
   date: z.string(),
   timeSlot: z.string(),
@@ -25,21 +11,12 @@ const businessEventSchema = z.object({
   price: z.number().min(0),
   venueSuggestion: z.string().min(1),
   venueAddress: z.string().min(1),
-  accountType: z.literal("BUSINESS"),
+  venuePostalCode: z.string().min(1),
+  venueCity: z.string().min(1),
+  lat: z.number().optional().nullable(),
+  lng: z.number().optional().nullable(),
+  accountType: z.enum(["BUSINESS", "PARTICULIER"]),
 });
-
-const particulierEventSchema = z.object({
-  title: z.string().min(1),
-  date: z.string(),
-  timeSlot: z.string(),
-  maxParticipants: z.number().int().min(2),
-  price: z.number().min(0),
-  venueSuggestion: z.string().min(1),
-  venueAddress: z.string().min(1),
-  accountType: z.literal("PARTICULIER"),
-});
-
-const eventSchema = z.union([businessEventSchema, particulierEventSchema]);
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -65,45 +42,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const coords = await geocodeAddress(data.venueAddress);
+    const fullAddress = `${data.venueAddress}, ${data.venuePostalCode} ${data.venueCity}`;
 
-    if (data.accountType === "BUSINESS") {
-      const event = await prisma.event.create({
-        data: {
-          title: data.title,
-          fripeirieName: data.venueSuggestion,
-          address: data.venueAddress,
-          lat: coords?.lat ?? null,
-          lng: coords?.lng ?? null,
-          date: eventDate,
-          timeSlot: data.timeSlot,
-          maxParticipants: data.maxParticipants,
-          price: data.price,
-          status: "UPCOMING",
-          createdById: session.user.id,
-        },
-      });
+    const event = await prisma.event.create({
+      data: {
+        title: data.title,
+        fripeirieName: data.venueSuggestion,
+        address: fullAddress,
+        lat: data.lat ?? null,
+        lng: data.lng ?? null,
+        date: eventDate,
+        timeSlot: data.timeSlot,
+        maxParticipants: data.maxParticipants,
+        price: data.price,
+        status: "UPCOMING",
+        createdById: session.user.id,
+      },
+    });
 
-      return NextResponse.json({ event }, { status: 201 });
-    } else {
-      const event = await prisma.event.create({
-        data: {
-          title: data.title,
-          fripeirieName: data.venueSuggestion,
-          address: data.venueAddress,
-          lat: coords?.lat ?? null,
-          lng: coords?.lng ?? null,
-          date: eventDate,
-          timeSlot: data.timeSlot,
-          maxParticipants: data.maxParticipants,
-          price: data.price,
-          status: "UPCOMING",
-          createdById: session.user.id,
-        },
-      });
-
-      return NextResponse.json({ event }, { status: 201 });
-    }
+    return NextResponse.json({ event }, { status: 201 });
   } catch (err) {
     console.error("[events POST] error:", err);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
@@ -116,20 +73,14 @@ export async function GET(req: NextRequest) {
 
   const now = new Date();
 
-  // Auto-expire past events on query
   await prisma.event.updateMany({
-    where: {
-      status: "UPCOMING",
-      date: { lt: now },
-    },
+    where: { status: "UPCOMING", date: { lt: now } },
     data: { status: "PAST" },
   });
 
   const events = await prisma.event.findMany({
     where: { status: status as "UPCOMING" | "PAST" | "CANCELLED" },
-    include: {
-      _count: { select: { registrations: true } },
-    },
+    include: { _count: { select: { registrations: true } } },
     orderBy: { date: "asc" },
   });
 

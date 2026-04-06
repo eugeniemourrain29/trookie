@@ -12,6 +12,8 @@ const updateSchema = z.object({
   price: z.number().min(0).optional(),
   venueSuggestion: z.string().min(1).optional(),
   venueAddress: z.string().min(1).optional(),
+  lat: z.number().optional().nullable(),
+  lng: z.number().optional().nullable(),
 });
 
 export async function PATCH(
@@ -54,21 +56,9 @@ export async function PATCH(
   if (data.maxParticipants) updateData.maxParticipants = data.maxParticipants;
   if (data.price !== undefined) updateData.price = data.price;
   if (data.venueSuggestion) updateData.fripeirieName = data.venueSuggestion;
-  if (data.venueAddress) {
-    updateData.address = data.venueAddress;
-    // Regeocode if address changed
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(data.venueAddress)}&format=json&limit=1&countrycodes=fr`;
-      const geoRes = await fetch(url, {
-        headers: { "User-Agent": "Trookie/1.0 (trookie.vercel.app)" },
-      });
-      const geoData = await geoRes.json();
-      if (geoData.length > 0) {
-        updateData.lat = parseFloat(geoData[0].lat);
-        updateData.lng = parseFloat(geoData[0].lon);
-      }
-    } catch {}
-  }
+  if (data.venueAddress) updateData.address = data.venueAddress;
+  if (data.lat !== undefined) updateData.lat = data.lat;
+  if (data.lng !== undefined) updateData.lng = data.lng;
   if (data.date) updateData.date = new Date(data.date);
 
   const updated = await prisma.event.update({

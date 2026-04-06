@@ -3,29 +3,18 @@
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Info } from "lucide-react";
-
-interface Friperie {
-  id: string;
-  name: string;
-  address: string;
-}
+import { AddressAutocomplete, type AddressResult } from "@/components/AddressAutocomplete";
 
 interface ProposeEventFormProps {
   accountType: "BUSINESS" | "PARTICULIER";
-  friperies: Friperie[];
+  friperies: { id: string; name: string; address: string }[];
   userId: string;
 }
 
 const TIME_SLOTS = [
-  "10h00 – 12h00",
-  "11h00 – 13h00",
-  "12h00 – 14h00",
-  "14h00 – 16h00",
-  "15h00 – 17h00",
-  "16h00 – 18h00",
-  "17h00 – 19h00",
-  "18h00 – 20h00",
-  "19h00 – 21h00",
+  "10h00 – 12h00", "11h00 – 13h00", "12h00 – 14h00",
+  "14h00 – 16h00", "15h00 – 17h00", "16h00 – 18h00",
+  "17h00 – 19h00", "18h00 – 20h00", "19h00 – 21h00",
 ];
 
 export function ProposeEventForm({ accountType, friperies, userId }: ProposeEventFormProps) {
@@ -36,44 +25,58 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
   const [timeSlot, setTimeSlot] = useState(TIME_SLOTS[5]);
   const [maxParticipants, setMaxParticipants] = useState(20);
   const [price, setPrice] = useState(5);
-  // Business: select from friperies
-  const [selectedFriperieId, setSelectedFriperieId] = useState(friperies[0]?.id ?? "");
-  // Particulier: free text venue suggestion
   const [venueSuggestion, setVenueSuggestion] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
+  const [venuePostalCode, setVenuePostalCode] = useState("");
+  const [venueCity, setVenueCity] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Min date = today
   const today = new Date().toISOString().split("T")[0];
+
+  function handleAddressSelect(result: AddressResult) {
+    setVenueAddress(result.label);
+    setVenuePostalCode(result.postcode);
+    setVenueCity(result.city);
+    setLat(result.lat);
+    setLng(result.lng);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!venuePostalCode || !venueCity) {
+      setError("Sélectionne une adresse dans la liste pour valider le code postal et la ville.");
+      return;
+    }
+
     setLoading(true);
-
     try {
-      const payload = {
-        title,
-        date,
-        timeSlot,
-        maxParticipants,
-        price,
-        venueSuggestion,
-        venueAddress,
-        accountType,
-      };
-
       const res = await fetch("/api/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          title,
+          date,
+          timeSlot,
+          maxParticipants,
+          price,
+          venueSuggestion,
+          venueAddress,
+          venuePostalCode,
+          venueCity,
+          lat,
+          lng,
+          accountType,
+        }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setError(data.error ?? "Une erreur est survenue.");
         return;
@@ -81,11 +84,7 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
 
       setSuccess(true);
       setTimeout(() => {
-        if (accountType === "BUSINESS") {
-          router.push("/dashboard/business");
-        } else {
-          router.push("/map");
-        }
+        router.push(accountType === "BUSINESS" ? "/dashboard/business" : "/map");
       }, 2000);
     } catch {
       setError("Impossible de soumettre l'événement. Réessaie.");
@@ -110,7 +109,6 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Particulier notice */}
       {accountType === "PARTICULIER" && (
         <div className="flex gap-3 bg-[#0e59c3]/5 border border-[#0e59c3]/20 text-[#0e59c3] text-sm px-4 py-3 rounded-xl">
           <Info className="w-4 h-4 flex-none mt-0.5" />
@@ -133,84 +131,67 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
           Titre de l&apos;événement
         </label>
         <input
-          type="text"
-          required
-          value={title}
+          type="text" required value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Loop Club Marais — Printemps 2025"
           className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
         />
       </div>
 
-      {/* Venue */}
-      {accountType === "BUSINESS" ? (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-black mb-1.5">
-              Nom de la friperie
-            </label>
-            <input
-              type="text"
-              required
-              value={venueSuggestion}
-              onChange={(e) => setVenueSuggestion(e.target.value)}
-              placeholder="Kilo Shop Marais"
-              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-black mb-1.5">
-              Adresse
-            </label>
-            <input
-              type="text"
-              required
-              value={venueAddress}
-              onChange={(e) => setVenueAddress(e.target.value)}
-              placeholder="69 rue Beaubourg, 75003 Paris"
-              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <div>
-            <label className="block text-sm font-medium text-black mb-1.5">
-              Nom de la friperie suggérée
-            </label>
-            <input
-              type="text"
-              required
-              value={venueSuggestion}
-              onChange={(e) => setVenueSuggestion(e.target.value)}
-              placeholder="Kilo Shop Beaubourg"
-              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-black mb-1.5">
-              Adresse
-            </label>
-            <input
-              type="text"
-              required
-              value={venueAddress}
-              onChange={(e) => setVenueAddress(e.target.value)}
-              placeholder="69 rue Beaubourg, 75003 Paris"
-              className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
-            />
-          </div>
-        </>
-      )}
+      {/* Venue name */}
+      <div>
+        <label className="block text-sm font-medium text-black mb-1.5">
+          Nom de la friperie
+        </label>
+        <input
+          type="text" required value={venueSuggestion}
+          onChange={(e) => setVenueSuggestion(e.target.value)}
+          placeholder="Kilo Shop Marais"
+          className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black placeholder-black/30 focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
+        />
+      </div>
+
+      {/* Address autocomplete */}
+      <div>
+        <label className="block text-sm font-medium text-black mb-1.5">
+          Adresse
+        </label>
+        <AddressAutocomplete
+          value={venueAddress}
+          onChange={handleAddressSelect}
+          placeholder="69 rue Beaubourg…"
+        />
+      </div>
+
+      {/* Postal code + city — filled automatically */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-black mb-1.5">
+            Code postal
+          </label>
+          <input
+            type="text" required readOnly value={venuePostalCode}
+            placeholder="75003"
+            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-black mb-1.5">
+            Ville
+          </label>
+          <input
+            type="text" required readOnly value={venueCity}
+            placeholder="Paris"
+            className="w-full px-4 py-3 rounded-xl border border-black/15 bg-black/3 text-black placeholder-black/30 focus:outline-none text-sm cursor-default"
+          />
+        </div>
+      </div>
 
       {/* Date */}
       <div>
         <label className="block text-sm font-medium text-black mb-1.5">Date</label>
         <input
-          type="date"
-          required
-          min={today}
-          value={date}
+          type="date" required min={today} value={date}
           onChange={(e) => setDate(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
         />
@@ -222,31 +203,23 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
           Créneau horaire
         </label>
         <select
-          required
-          value={timeSlot}
-          onChange={(e) => setTimeSlot(e.target.value)}
+          required value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
         >
           {TIME_SLOTS.map((slot) => (
-            <option key={slot} value={slot}>
-              {slot}
-            </option>
+            <option key={slot} value={slot}>{slot}</option>
           ))}
         </select>
       </div>
 
-      {/* Max participants + price side by side */}
+      {/* Max participants + price */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-black mb-1.5">
             Participants max
           </label>
           <input
-            type="number"
-            required
-            min={2}
-            max={100}
-            value={maxParticipants}
+            type="number" required min={2} max={100} value={maxParticipants}
             onChange={(e) => setMaxParticipants(Number(e.target.value))}
             className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
           />
@@ -256,11 +229,7 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
             Prix (€)
           </label>
           <input
-            type="number"
-            required
-            min={0}
-            step={0.5}
-            value={price}
+            type="number" required min={0} step={0.5} value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
             className="w-full px-4 py-3 rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#0e59c3] focus:border-transparent transition text-sm"
           />
@@ -268,16 +237,11 @@ export function ProposeEventForm({ accountType, friperies, userId }: ProposeEven
       </div>
 
       <button
-        type="submit"
-        disabled={loading}
+        type="submit" disabled={loading}
         className="w-full bg-[#0e59c3] text-white font-medium py-3 rounded-xl hover:bg-[#0d4fad] transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm mt-2"
       >
         {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-        {loading
-          ? "Envoi en cours…"
-          : accountType === "BUSINESS"
-          ? "Créer le Loop Club"
-          : "Envoyer ma suggestion"}
+        {loading ? "Envoi en cours…" : accountType === "BUSINESS" ? "Créer le Loop Club" : "Envoyer ma suggestion"}
       </button>
     </form>
   );
