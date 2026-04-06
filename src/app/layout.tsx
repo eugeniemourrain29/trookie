@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { auth } from "@/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,15 +22,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="fr" className={inter.variable}>
       <body className="min-h-screen bg-[#fffcf5] text-black antialiased">
-        <Navbar />
+        <Navbar
+          isLoggedIn={!!session?.user}
+          userName={session?.user?.name ?? undefined}
+          accountType={session?.user?.accountType ?? undefined}
+        />
         <main className="flex-1">{children}</main>
       </body>
     </html>
