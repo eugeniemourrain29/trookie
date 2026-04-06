@@ -3,6 +3,20 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=fr`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Trookie/1.0 (trookie.vercel.app)" },
+    });
+    const data = await res.json();
+    if (data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch {}
+  return null;
+}
+
 const businessEventSchema = z.object({
   title: z.string().min(1),
   date: z.string(),
@@ -51,12 +65,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const coords = await geocodeAddress(data.venueAddress);
+
     if (data.accountType === "BUSINESS") {
       const event = await prisma.event.create({
         data: {
           title: data.title,
           fripeirieName: data.venueSuggestion,
           address: data.venueAddress,
+          lat: coords?.lat ?? null,
+          lng: coords?.lng ?? null,
           date: eventDate,
           timeSlot: data.timeSlot,
           maxParticipants: data.maxParticipants,
@@ -68,13 +86,13 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({ event }, { status: 201 });
     } else {
-      // Particulier suggestion — store as UPCOMING but flag with a note
-      // In production, admin would review these. Status could be PENDING.
       const event = await prisma.event.create({
         data: {
           title: data.title,
           fripeirieName: data.venueSuggestion,
           address: data.venueAddress,
+          lat: coords?.lat ?? null,
+          lng: coords?.lng ?? null,
           date: eventDate,
           timeSlot: data.timeSlot,
           maxParticipants: data.maxParticipants,
