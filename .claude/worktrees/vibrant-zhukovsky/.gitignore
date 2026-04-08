@@ -1,7 +1,0 @@
-node_modules
-.env
-.next
-*.tsbuildinfo
-prisma/migrations
-.vercel
-.env*.local

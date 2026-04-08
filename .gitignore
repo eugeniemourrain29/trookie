@@ -5,3 +5,7 @@ node_modules
 prisma/migrations
 .vercel
 .env*.local
+.claude/
+lazy_dog.ttf
+lazy_dog.zip
+myloopclub.png
