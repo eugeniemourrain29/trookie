@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
     const resetLink = `${appUrl}/auth/reset-password?token=${token}`;
 
     await resend.emails.send({
-      from: "Trookie <onboarding@resend.dev>",
+      from: "My Loop Club <onboarding@resend.dev>",
       to: normalizedEmail,
-      subject: "Réinitialisation de ton mot de passe — Trookie",
+      subject: "Réinitialisation de ton mot de passe — My Loop Club",
       html: `
         <!DOCTYPE html>
         <html lang="fr">
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
                   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
                     <tr>
                       <td style="padding-bottom:32px;text-align:center;">
-                        <span style="font-size:28px;font-weight:900;color:#0e59c3;text-decoration:none;">Trookie</span>
+                        <span style="font-size:28px;font-weight:900;color:#0e59c3;text-decoration:none;">My Loop Club</span>
                       </td>
                     </tr>
                     <tr>
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
                     <tr>
                       <td style="padding-top:24px;text-align:center;">
                         <p style="margin:0;font-size:12px;color:rgba(0,0,0,0.3);">
-                          © ${new Date().getFullYear()} Trookie. Tous droits réservés.
+                          © ${new Date().getFullYear()} My Loop Club. Tous droits réservés.
                         </p>
                       </td>
                     </tr>

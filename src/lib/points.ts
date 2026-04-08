@@ -1,5 +1,5 @@
 /**
- * Trookie points calculation logic.
+ * My Loop Club points calculation logic.
  *
  * Points grid:
  * - ≥ 80% natural fibers  → 3 points per item

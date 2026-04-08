@@ -74,7 +74,7 @@ export default function SignUpPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <Link href="/" className="text-3xl font-black text-[#0e59c3]">
-            Trookie
+            My Loop Club
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-black">Crée ton compte</h1>
           <p className="mt-2 text-sm text-black/50">

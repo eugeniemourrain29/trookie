@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Trookie — Loop Clubs à Paris",
+  title: "My Loop Club — Loop Clubs à Paris",
   description:
-    "Échangez vos vêtements dans les meilleures friperies parisiennes. Rejoignez un Loop Club Trookie.",
+    "Échangez vos vêtements dans les meilleures friperies parisiennes. Rejoignez un Loop Club My Loop Club.",
   keywords: ["friperie", "échange vêtements", "Paris", "mode durable", "Loop Club"],
   openGraph: {
-    title: "Trookie — Loop Clubs à Paris",
+    title: "My Loop Club — Loop Clubs à Paris",
     description: "Échangez vos vêtements dans les meilleures friperies parisiennes.",
     locale: "fr_FR",
     type: "website",

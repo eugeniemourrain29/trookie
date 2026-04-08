@@ -65,13 +65,13 @@ export const PATCH = auth(async function PATCH(req, ctx) {
     await Promise.allSettled(
       participants.map((p) =>
         resend.emails.send({
-          from: "Trookie <onboarding@resend.dev>",
+          from: "My Loop Club <onboarding@resend.dev>",
           to: p.email,
           subject: `Modification d'un Loop Club — ${updated.title}`,
           html: `<!DOCTYPE html><html lang="fr"><body style="margin:0;padding:0;background-color:#fffcf5;font-family:sans-serif;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fffcf5;padding:40px 20px;">
               <tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-                <tr><td style="padding-bottom:32px;text-align:center;"><span style="font-size:28px;font-weight:900;color:#0e59c3;">Trookie</span></td></tr>
+                <tr><td style="padding-bottom:32px;text-align:center;"><span style="font-size:28px;font-weight:900;color:#0e59c3;">My Loop Club</span></td></tr>
                 <tr><td style="background:#fff;border-radius:16px;padding:40px;border:1px solid rgba(0,0,0,0.08);">
                   <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;">Un Loop Club a été modifié</h1>
                   <p style="margin:0 0 8px;font-size:15px;color:rgba(0,0,0,0.6);">Bonjour ${p.name},</p>
@@ -89,7 +89,7 @@ export const PATCH = auth(async function PATCH(req, ctx) {
                     <a href="${eventLink}" style="display:inline-block;background:#0e59c3;color:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:12px;">Voir l'événement</a>
                   </td></tr></table>
                 </td></tr>
-                <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:12px;color:rgba(0,0,0,0.3);">© ${new Date().getFullYear()} Trookie.</p></td></tr>
+                <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:12px;color:rgba(0,0,0,0.3);">© ${new Date().getFullYear()} My Loop Club.</p></td></tr>
               </table></td></tr>
             </table></body></html>`,
         })

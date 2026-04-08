@@ -81,7 +81,7 @@ export default async function UserDashboardPage() {
             </div>
             <div>
               <p className="font-semibold text-[#0e59c3]">
-                Tu as {totalPoints} points Trookie !
+                Tu as {totalPoints} points My Loop Club !
               </p>
               <p className="text-xs text-[#0e59c3]/70 mt-0.5">
                 Continue d&apos;apporter des fibres naturelles pour maximiser tes points.

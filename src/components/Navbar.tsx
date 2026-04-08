@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, LogOut, User } from "lucide-react";
@@ -36,11 +37,8 @@ export function Navbar({ userName, accountType, isLoggedIn }: NavbarProps) {
     <nav className="sticky top-0 z-50 bg-[#fffcf5]/90 backdrop-blur-sm border-b border-black/8">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link
-          href="/"
-          className="text-2xl font-black text-[#0e59c3] tracking-tight hover:opacity-80 transition-opacity"
-        >
-          Trookie
+        <Link href="/" className="hover:opacity-80 transition-opacity">
+          <Image src="/logo.png" alt="My Loop Club" height={36} width={160} className="object-contain" />
         </Link>
 
         {/* Desktop nav */}

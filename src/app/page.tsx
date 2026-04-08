@@ -13,7 +13,7 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight text-[#0e59c3] mb-6 leading-none">
-            Trookie
+            My Loop Club
           </h1>
 
           <p className="text-xl sm:text-2xl text-black/70 mb-4 font-medium">
@@ -108,7 +108,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-black/8 text-center text-sm text-black/40">
-        © {new Date().getFullYear()} Trookie — Mode circulaire à Paris
+        © {new Date().getFullYear()} My Loop Club — Mode circulaire à Paris
       </footer>
     </div>
   );
